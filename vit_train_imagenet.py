@@ -227,7 +227,7 @@ train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=T
 val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False, num_workers=8, pin_memory=True)
 
 # Define checkpoint path
-checkpoint_path = 'checkpoints/latest_checkpoint.pth.tar'
+checkpoint_path = 'checkpoints/latest_checkpoint_vit.pth.tar'
 
 
 # Initialize the model
@@ -254,7 +254,7 @@ scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.epochs)
 scaler = torch.cuda.amp.GradScaler()
 
 # Function to save checkpoint
-def save_checkpoint(state, checkpoint_dir='checkpoints', filename='latest_checkpoint.pth.tar'):
+def save_checkpoint(state, checkpoint_dir='checkpoints_vit', filename='latest_checkpoint_vit.pth.tar'):
     os.makedirs(checkpoint_dir, exist_ok=True)
     filepath = os.path.join(checkpoint_dir, filename)
     torch.save(state, filepath)

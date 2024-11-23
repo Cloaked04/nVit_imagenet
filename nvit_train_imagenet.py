@@ -282,7 +282,7 @@ train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=T
 val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False, num_workers=8, pin_memory=True)
 
 # Define checkpoint path
-checkpoint_path = 'checkpoints/latest_checkpoint.pth.tar'
+checkpoint_path = 'checkpoints_nvit/latest_checkpoint_nvit.pth.tar'
 
 # Initialize the model
 model = nViT(
@@ -382,8 +382,8 @@ for epoch in range(start_epoch, num_epochs + 1):
                 'best_val_accuracy': best_val_accuracy
             }
             # Save checkpoint
-            os.makedirs('checkpoints', exist_ok=True)
-            torch.save(checkpoint_state, f'checkpoints/nvit_checkpoint_epoch_{epoch}.pth.tar')
+            os.makedirs('checkpoints_nvit', exist_ok=True)
+            torch.save(checkpoint_state, f'checkpoints/latest_checkpoint_nvit.pth.tar')
             last_checkpoint_time = time.time()  # Reset checkpoint timer
 
     # Scheduler step
