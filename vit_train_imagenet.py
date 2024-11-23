@@ -226,6 +226,10 @@ val_dataset = datasets.ImageNet(root='datasets/imagenet/val', split='val', trans
 train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True, num_workers=8, pin_memory=True)
 val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False, num_workers=8, pin_memory=True)
 
+# Define checkpoint path
+checkpoint_path = 'checkpoints/latest_checkpoint.pth.tar'
+
+
 # Initialize the model
 model = ViT(
     image_size=config.image_size,
@@ -257,10 +261,13 @@ def save_checkpoint(state, checkpoint_dir='checkpoints', filename='latest_checkp
 
 # Function to load checkpoint (if resuming training)
 def load_checkpoint(checkpoint_path):
-    checkpoint = torch.load(checkpoint_path)
+    checkpoint = torch.load(checkpoint_path, map_location=device)
     model.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
-    start_epoch = checkpoint['epoch']
+    scheduler.load_state_dict(checkpoint['scheduler'])
+    scaler.load_state_dict(checkpoint['scaler'])
+    best_val_accuracy = checkpoint.get('best_val_accuracy', 0.0)
+    start_epoch = checkpoint['epoch'] + 1  # Start from next epoch
     return start_epoch
 
 # Function to compute gradient norms
@@ -293,7 +300,14 @@ last_checkpoint_time = start_time
 num_epochs = config.epochs
 best_val_accuracy = 0.0
 
-for epoch in range(1, num_epochs + 1):
+# Load checkpoint if available
+start_epoch = 1
+if os.path.exists(checkpoint_path):
+    print(f"Checkpoint found at '{checkpoint_path}'. Resuming training...")
+    start_epoch = load_checkpoint(checkpoint_path)
+    print(f"Resumed training from epoch {start_epoch}.")
+
+for epoch in range(start_epoch, num_epochs + 1):
     epoch_start_time = time.time()
     model.train()
     running_loss = 0.0
@@ -346,6 +360,9 @@ for epoch in range(1, num_epochs + 1):
                 'epoch': epoch,
                 'state_dict': model.state_dict(),
                 'optimizer': optimizer.state_dict(),
+                'scheduler': scheduler.state_dict(),
+                'scaler': scaler.state_dict(),
+                'best_val_accuracy': best_val_accuracy
             }
             save_checkpoint(checkpoint_state)
             last_checkpoint_time = time.time()  # Reset checkpoint timer
